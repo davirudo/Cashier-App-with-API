@@ -19,29 +19,15 @@ class api_pcs_transaksi extends REST_Controller {
     }
 
     //Melihat Data
-	public function transaksi_get()
+	public function itemtransaksi_get()
 	{
-        $result = $this->m_transaksi->getTransaksi();
+        $result = $this->m_transaksi->getItemTransaksi();
 
         $data_json = array(
             "success" => true,
             "message" => "Data Ditemukan", 
             "data" => array(
-                "transaksi" => $result
-            )
-        );
-        $this->response($data_json, REST_Controller::HTTP_OK);
-	}
-
-    public function transaksi_bulanan_get()
-	{
-        $result = $this->m_transaksi->getTransaksiBulanan();
-
-        $data_json = array(
-            "success" => true,
-            "message" => "Data Ditemukan", 
-            "data" => array(
-                "transaksi" => $result
+                "item_transaksi" => $result
             )
         );
         $this->response($data_json, REST_Controller::HTTP_OK);
@@ -50,26 +36,42 @@ class api_pcs_transaksi extends REST_Controller {
     //////////////////////////////////////////////////////////////////////
 
     //Memasukkan Data
-    public function transaksi_post()
+    public function itemtransaksi_post()
 	{
         $this->cekToken();
         //Validasi
         $validation_message = [];
         
-        if($this->input->post("idadmin")==""){
-            array_push($validation_message, "ID Admin tidak diperbolehkan kosong");
+        if($this->input->post("idtransaksi")==""){
+            array_push($validation_message, "ID Transaksi tidak diperbolehkan kosong");
         }
 
-        if($this->input->post("idadmin")!="" && !$this->m_admin->cekAdaAdmin($this->input->post("idadmin"))){
-            array_push($validation_message, "ID Admin tidak ditemukan");
+        if($this->input->post("idtransaksi")!="" && !$this->m_transaksi->cekAdaTransaksi($this->input->post("idtransaksi"))){
+            array_push($validation_message, "ID Transaksi tidak ditemukan");
         }
 
-        if($this->input->post("total")==""){
-            array_push($validation_message, "Total tidak diperbolehkan kosong");
+        if($this->input->post("idproduk")==""){
+            array_push($validation_message, "ID Produk tidak diperbolehkan kosong");
+        }
+
+        if($this->input->post("idproduk")!="" && !$this->m_produk->cekAdaProduk($this->input->post("idproduk"))){
+            array_push($validation_message, "ID Produk tidak ditemukan");
+        }
+
+        if($this->input->post("qty")==""){
+            array_push($validation_message, "Qty tidak diperbolehkan kosong");
         }
         
-        if($this->input->post("total")!="" && !is_numeric($this->input->post("total"))){
-            array_push($validation_message, "Total harus berisi angka");
+        if($this->input->post("qty")!="" && !is_numeric($this->input->post("qty"))){
+            array_push($validation_message, "Qty harus berisi angka");
+        }
+
+        if($this->input->post("harga_saat_transaksi")==""){
+            array_push($validation_message, "Harga tidak diperbolehkan kosong");
+        }
+        
+        if($this->input->post("harga_saat_transaksi")!="" && !is_numeric($this->input->post("harga_saat_transaksi"))){
+            array_push($validation_message, "Harga harus berisi angka");
         }
 
         if(count($validation_message)>0){
@@ -89,11 +91,13 @@ class api_pcs_transaksi extends REST_Controller {
         //Jika Lolos Validasi
         
         $data = array(
-            "idadmin" => $this->input->post("idadmin"),
-            "total" => $this->input->post("total"),
-            "tanggal" => date('Y-m-d H:i:s')
+            "idtransaksi" => $this->input->post("idtransaksi"),
+            "idproduk" => $this->input->post("idproduk"),
+            "qty" => $this->input->post("qty"),
+            "harga_saat_transaksi" => $this->input->post("harga_saat_transaksi"),
+            "subtotal" => $this->input->post("qty") * $this->input->post("harga_saat_transaksi")
         );
-        $result = $this->m_transaksi->insertTransaksi($data);
+        $result = $this->m_itemtransaksi->insertItemTransaksi($data);
 
         $data_json = array(
             "success" => true,
@@ -110,7 +114,7 @@ class api_pcs_transaksi extends REST_Controller {
     //////////////////////////////////////////////////////////////////////
 
     //Mengedit Data
-    public function transaksi_put()
+    public function itemtransaksi_put()
 	{
         $this->cekToken();
         //Validasi
@@ -120,20 +124,36 @@ class api_pcs_transaksi extends REST_Controller {
             array_push($validation_message, "ID tidak diperbolehkan kosong");
         }
 
-        if($this->put("idadmin")==""){
-            array_push($validation_message, "ID Admin tidak diperbolehkan kosong");
+        if($this->put("idtransaksi")==""){
+            array_push($validation_message, "ID Transaksi tidak diperbolehkan kosong");
         }
 
-        if($this->put("idadmin")!="" && !$this->m_admin->cekAdaAdmin($this->put("idadmin"))){
-            array_push($validation_message, "ID Admin tidak ditemukan");
+        if($this->put("idtransaksi")!="" && !$this->m_transaksi->cekAdaTransaksi($this->put("idtransaksi"))){
+            array_push($validation_message, "ID Transaksi tidak ditemukan");
         }
 
-        if($this->put("total")==""){
-            array_push($validation_message, "Total tidak diperbolehkan kosong");
+        if($this->put("idproduk")==""){
+            array_push($validation_message, "ID Produk tidak diperbolehkan kosong");
         }
 
-        if($this->put("total")!="" && !is_numeric($this->put("total"))){
-            array_push($validation_message, "Total harus berisi angka");
+        if($this->put("idproduk")!="" && !$this->m_produk->cekAdaProduk($this->put("idproduk"))){
+            array_push($validation_message, "ID Produk tidak ditemukan");
+        }
+
+        if($this->input("qty")==""){
+            array_push($validation_message, "Qty tidak diperbolehkan kosong");
+        }
+        
+        if($this->put("qty")!="" && !is_numeric($this->put("qty"))){
+            array_push($validation_message, "Qty harus berisi angka");
+        }
+
+        if($this->put("harga_saat_transaksi")==""){
+            array_push($validation_message, "Harga tidak diperbolehkan kosong");
+        }
+        
+        if($this->put("harga_saat_transaksi")!="" && !is_numeric($this->put("harga_saat_transaksi"))){
+            array_push($validation_message, "Harga harus berisi angka");
         }
 
 
@@ -152,20 +172,22 @@ class api_pcs_transaksi extends REST_Controller {
 
         //Jika Lolos Validasi
         $data = array(
-            "idadmin" => $this->put("idadmin"),
-            "total" => $this->put("total"),
-            "tanggal" => date('Y-m-d H:i:s')
+            "idtransaksi" => $this->put("idtransaksi"),
+            "idproduk" => $this->put("idproduk"),
+            "qty" => $this->put("qty"),
+            "harga_saat_transaksi" => $this->put("harga_saat_transaksi"),
+            "subtotal" => $this->put("qty") * $this->put("harga_saat_transaksi")
         );
 
         $id = $this->put("id");
 
-        $result = $this->m_transaksi->updateTransaksi($data, $id);
+        $result = $this->m_transaksi->updateitemTransaksi($data, $id);
 
         $data_json = array(
             "success" => true,
             "message" => "Data Diperbaharui", 
             "data" => array(
-                "transaksi" => $result
+                "item_transaksi" => $result
             )
             
         );
@@ -176,17 +198,17 @@ class api_pcs_transaksi extends REST_Controller {
     //////////////////////////////////////////////////////////////////////
 
     //Menghapus Data
-    public function transaksi_delete() {
+    public function itemtransaksi_delete() {
         $this->cekToken();
         $id = $this->delete("id");
 
-        $result = $this->m_transaksi->deleteTransaksi($id);
+        $result = $this->m_itemtransaksi->deleteItemTransaksi($id);
         
         //Validasi
         if(empty($result)){
             $data_json = array(
             "success" => false,
-            "message" => "Id Tidak Ditemukan", 
+            "message" => "ID Tidak Ditemukan", 
             "data" => null
         );
 
@@ -200,7 +222,7 @@ class api_pcs_transaksi extends REST_Controller {
             "success" => true,
             "message" => "Data Berhasil Dihapus", 
             "data" => array(
-                "transaksi" => $result
+                "item_transaksi" => $result
             )
             
         );
